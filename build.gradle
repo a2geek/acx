@@ -1,0 +1,27 @@
+plugins {
+    id 'org.springframework.boot' version '2.0.2.RELEASE'
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'info.picocli:picocli:4.0.4'
+    compile 'net.sf.applecommander:AppleCommander:1.5.0'
+}
+
+application {
+    mainClassName = 'io.github.applecommander.acx.Main'
+}
+
+bootJar {
+  manifest {
+    attributes(
+      'Implementation-Title': 'acx',
+      'Implementation-Version': "${version} (${new Date().format('yyyy-MM-dd HH:mm')})" 
+    )
+  }
+}
