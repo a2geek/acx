@@ -34,11 +34,11 @@ public class ListCommand implements Callable<Integer> {
     @ArgGroup(exclusive = true, multiplicity = "0..1", heading = "File display formatting:%n")
     private FileDisplay fileDisplay = new FileDisplay();
     
-    @Option(names = { "-r", "--recursive"}, description = "Display directory recursively.", negatable = true)
-    private boolean recursiveFlag = true;
+    @Option(names = { "-r", "--recursive"}, description = "Display directory recursively.", negatable = true, defaultValue = "false")
+    private boolean recursiveFlag;
     
     @Option(names = { "--deleted" }, description = "Show deleted files.")
-    private boolean deletedFlag = false;
+    private boolean deletedFlag;
 
     @Parameters(arity = "1..*", description = "Image(s) to process.")
     private List<Path> paths = new ArrayList<Path>();
