@@ -5,10 +5,10 @@ gradle-app.setting
 !gradle-wrapper.jar
 .gradletasknamecache
 
-# Ignore handy disk image stuff
-*.dsk
-*.po
-*.do
+# Ignore handy disk image stuff in project root
+/*.dsk
+/*.po
+/*.do
 
 # Ignore Eclipse stuff
 .classpath
