@@ -26,7 +26,10 @@ public class Main {
     TextBundle textBundle = UiBundle.getInstance();
     
     @Option(names = { "--debug" }, description = "Show detailed stack traces.")
-    private boolean debug;
+    private boolean debugFlag;
+    
+    @Option(names = { "-v", "--verbose" }, description = "Be verbose.")
+    private boolean verboseFlag;
 
     public static void main(String[] args) {
         CommandLine cmd = new CommandLine(new Main());
@@ -40,7 +43,7 @@ public class Main {
     }
 
     public void log(Throwable t) {
-        if (debug) {
+        if (debugFlag) {
             t.printStackTrace(System.err);
         } else {
             System.err.println(t.getLocalizedMessage());
@@ -48,8 +51,13 @@ public class Main {
     }
     public void logf(String format, String arg1, Throwable t) {
         System.err.printf(format, arg1, t.getLocalizedMessage());
-        if (debug) {
+        if (debugFlag) {
             t.printStackTrace(System.err);
+        }
+    }
+    public void logf(String format, Object... args) {
+        if (verboseFlag) {
+            System.out.printf(format, args);
         }
     }
 }
