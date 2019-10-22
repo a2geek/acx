@@ -3,6 +3,13 @@ package io.github.applecommander.filters;
 import com.webcodepro.applecommander.storage.FileEntry;
 import com.webcodepro.applecommander.storage.FileFilter;
 
+/**
+ * A custom FileFilter to dump "raw" data from the disk.
+ * This filter uses the filename as given on the Disk with
+ * no additional extensions.
+ * 
+ * @author rob
+ */
 public class RawFileFilter implements FileFilter {
 
     @Override
