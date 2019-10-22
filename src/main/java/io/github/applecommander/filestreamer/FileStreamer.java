@@ -2,10 +2,11 @@ package io.github.applecommander.filestreamer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Queue;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -16,6 +17,22 @@ import com.webcodepro.applecommander.storage.DiskUnrecognizedException;
 import com.webcodepro.applecommander.storage.FileEntry;
 import com.webcodepro.applecommander.storage.FormattedDisk;
 
+/**
+ * FileStreamer is utility class that will (optionally) recurse through all directories and
+ * feed a Java Stream of useful directory walking detail (disk, directory, file, and the 
+ * textual path to get there).
+ * <p>
+ * Sample usage:
+ * <pre>
+ * FileStreamer.forDisk(image)
+ *             .ignoreErrors(true)
+ *             .stream()
+ *             .filter(this::fileFilter)
+ *             .forEach(fileHandler);
+ * </pre>
+ * 
+ * @author rob
+ */
 public class FileStreamer {
     public static FileStreamer forDisk(File file) throws IOException, DiskUnrecognizedException {
         return forDisk(file.getPath());
@@ -52,47 +69,45 @@ public class FileStreamer {
     }
     
     private class FileTupleIterator implements Iterator<FileTuple> {
-        private Queue<FormattedDisk> disks = new LinkedList<>();
-        private Queue<FileTuple> directories = new LinkedList<>();
-        private Queue<FileTuple> files = new LinkedList<>();
+        private LinkedList<FileTuple> files = new LinkedList<>();
         
         private FileTupleIterator() {
-            for (FormattedDisk formattedDisk : formattedDisks) disks.add(formattedDisk);
+            for (FormattedDisk formattedDisk : formattedDisks) {
+                files.addAll(toTupleList(FileTuple.of(formattedDisk)));
+            }
         }
 
         @Override
         public boolean hasNext() {
-            if (directories.isEmpty() && !disks.isEmpty()) {
-                FormattedDisk formattedDisk = disks.poll();
-                directories.add(FileTuple.of(formattedDisk));
-            }
-            if (files.isEmpty() && !directories.isEmpty()) {
-                FileTuple tuple = directories.poll();
-                try {
-                    for (FileEntry fileEntry : tuple.directoryEntry.getFiles()) {
-                        if (fileEntry.isDirectory()) {
-                            if (recursiveFlag || fileEntry instanceof FormattedDisk) {
-                                directories.add(tuple.pushd(fileEntry));
-                            }
-                        }
-                        files.add(tuple.of(fileEntry));
-                    }
-                } catch (DiskException e) {
-                    if (!ignoreErrorsFlag) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
             return !files.isEmpty();
         }
 
         @Override
         public FileTuple next() {
             if (hasNext()) {
-                return files.poll();
+                FileTuple tuple = files.removeFirst();
+                if (recursiveFlag && tuple.fileEntry.isDirectory()) {
+                    FileTuple newTuple = tuple.pushd(tuple.fileEntry);
+                    files.addAll(0, toTupleList(newTuple));
+                }
+                return tuple;
             } else {
                 throw new NoSuchElementException();
             }
+        }
+        
+        private List<FileTuple> toTupleList(FileTuple tuple) {
+            List<FileTuple> list = new ArrayList<>();
+            try {
+                for (FileEntry fileEntry : tuple.directoryEntry.getFiles()) {
+                    list.add(tuple.of(fileEntry));
+                }
+            } catch (DiskException e) {
+                if (!ignoreErrorsFlag) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return list;
         }
     }
 }
