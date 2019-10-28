@@ -2,12 +2,20 @@ package io.github.applecommander.filestreamer;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Spliterators;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -34,6 +42,8 @@ import com.webcodepro.applecommander.storage.FormattedDisk;
  * @author rob
  */
 public class FileStreamer {
+    private static final Consumer<FormattedDisk> NOOP_CONSUMER = d -> {};
+
     public static FileStreamer forDisk(File file) throws IOException, DiskUnrecognizedException {
         return forDisk(file.getPath());
     }
@@ -45,8 +55,19 @@ public class FileStreamer {
     }
     
     private FormattedDisk[] formattedDisks = null;
+    
+    // Processor flags (used in gathering)
     private boolean ignoreErrorsFlag = false;
     private boolean recursiveFlag = true;
+    
+    // Processor events
+    private Consumer<FormattedDisk> beforeDisk = NOOP_CONSUMER;
+    private Consumer<FormattedDisk> afterDisk = NOOP_CONSUMER;
+    
+    // Filters
+    private Predicate<FileTuple> filters = this::deletedFileFilter;
+    private boolean includeDeletedFlag = false;
+    private List<PathMatcher> pathMatchers = new ArrayList<>();
     
     private FileStreamer(Disk disk) throws DiskUnrecognizedException {
         this.formattedDisks = disk.getFormattedDisks();
@@ -60,16 +81,59 @@ public class FileStreamer {
         this.recursiveFlag = flag;
         return this;
     }
+    public FileStreamer matchGlobs(List<String> globs) {
+        if (globs != null && !globs.isEmpty()) {
+            FileSystem fs = FileSystems.getDefault();
+            for (String glob : globs) {
+                pathMatchers.add(fs.getPathMatcher("glob:" + glob));
+            }
+            this.filters = filters.and(this::globFilter);
+        }
+        return this;
+    }
+    public FileStreamer matchGlobs(String... globs) {
+        return matchGlobs(Arrays.asList(globs));
+    }
+    public FileStreamer includeTypeOfFile(TypeOfFile type) {
+        this.filters = filters.and(type.predicate);
+        return this;
+    }
+    public FileStreamer includeDeleted(boolean flag) {
+        this.includeDeletedFlag = flag;
+        return this;
+    }
+    public FileStreamer beforeDisk(Consumer<FormattedDisk> consumer) {
+        this.beforeDisk = consumer;
+        return this;
+    }
+    public FileStreamer afterDisk(Consumer<FormattedDisk> consumer) {
+        this.afterDisk = consumer;
+        return this;
+    }
     
     public Stream<FileTuple> stream() {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(), 0), false);
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(), 0), false)
+                            .filter(filters);
     }
     public Iterator<FileTuple> iterator() {
         return new FileTupleIterator();
     }
     
+    protected boolean deletedFileFilter(FileTuple tuple) {
+        return includeDeletedFlag || !tuple.fileEntry.isDeleted();
+    }
+    protected boolean globFilter(FileTuple tuple) {
+        FileSystem fs = FileSystems.getDefault();
+        Path path = Paths.get(String.join(fs.getSeparator(), tuple.paths), tuple.fileEntry.getFilename());
+        for (PathMatcher pathMatcher : pathMatchers) {
+            if (pathMatcher.matches(path)) return true;
+        }
+        return false;
+    }
+    
     private class FileTupleIterator implements Iterator<FileTuple> {
         private LinkedList<FileTuple> files = new LinkedList<>();
+        private FormattedDisk currentDisk;
         
         private FileTupleIterator() {
             for (FormattedDisk formattedDisk : formattedDisks) {
@@ -79,7 +143,24 @@ public class FileStreamer {
 
         @Override
         public boolean hasNext() {
-            return !files.isEmpty();
+            boolean hasNext = !files.isEmpty();
+            if (hasNext) {
+                FileTuple tuple = files.peek();
+                // Was there a disk switch?
+                if (tuple.formattedDisk != currentDisk) {
+                    if (currentDisk != null) {
+                        afterDisk.accept(currentDisk);
+                    }
+                    currentDisk = tuple.formattedDisk;
+                    beforeDisk.accept(currentDisk);
+                }
+            } else {
+                if (currentDisk != null) {
+                    afterDisk.accept(currentDisk);
+                }
+                currentDisk = null;
+            }
+            return hasNext;
         }
 
         @Override

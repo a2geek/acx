@@ -9,6 +9,7 @@ gradle-app.setting
 /*.dsk
 /*.po
 /*.do
+/tmp/
 
 # Ignore Eclipse stuff
 .classpath

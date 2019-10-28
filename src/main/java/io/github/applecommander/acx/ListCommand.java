@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import com.webcodepro.applecommander.storage.DirectoryEntry;
-import com.webcodepro.applecommander.storage.Disk;
-import com.webcodepro.applecommander.storage.DiskException;
-import com.webcodepro.applecommander.storage.FileEntry;
+import com.webcodepro.applecommander.storage.DiskUnrecognizedException;
 import com.webcodepro.applecommander.storage.FormattedDisk;
 import com.webcodepro.applecommander.storage.FormattedDisk.FileColumnHeader;
 
+import io.github.applecommander.filestreamer.FileStreamer;
+import io.github.applecommander.filestreamer.FileTuple;
+import io.github.applecommander.filestreamer.TypeOfFile;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -39,9 +39,27 @@ public class ListCommand implements Callable<Integer> {
     
     @Option(names = { "--deleted" }, description = "Show deleted files.")
     private boolean deletedFlag;
+    
+    @ArgGroup(exclusive = true, multiplicity = "0..1")
+    private TypeOfFileSelection typeOfFile = new TypeOfFileSelection();
 
-    @Parameters(arity = "1..*", description = "Image(s) to process.")
+    @Option(names = "--header", negatable = true, description = "Show header.")
+    private boolean headerFlag = true;
+
+    @Option(names = "--column", negatable = true, description = "Show column headers.")
+    private boolean columnFlag = true;
+
+    @Option(names = "--footer", negatable = true, description = "Show footer.")
+    private boolean footerFlag = true;
+
+    @Parameters(index = "0", arity = "1..*", description = "Image(s) to process.")
     private List<Path> paths = new ArrayList<Path>();
+
+    // Use "--" to separate
+    @Parameters(index = "1", arity = "*", description = "File glob(s) to match.")
+    private List<String> globs = new ArrayList<String>();
+    
+    private List<String> fmtSpec;
 
     @Override
     public Integer call() throws Exception {
@@ -49,9 +67,6 @@ public class ListCommand implements Callable<Integer> {
             String filename = path.toString();
             try {
                 showDisk(filename);
-            } catch (DiskException e) {
-                main.log(e);
-                return 1;
             } catch (RuntimeException e) {
                 main.logf("%s: %s\n", filename, e);
             }
@@ -59,59 +74,50 @@ public class ListCommand implements Callable<Integer> {
         return 0;
     }
     
-    /**
-     * Show all components for a Disk.
-     */
-    private void showDisk(String filename) throws IOException, DiskException {
-        Disk disk = new Disk(filename);
-        FormattedDisk[] formattedDisks = disk.getFormattedDisks();
-        List<String> fmtSpec = null;
-        for (int i = 0; i < formattedDisks.length; i++) {
-            FormattedDisk formattedDisk = formattedDisks[i];
-            
-            List<FileColumnHeader> headers = formattedDisk.getFileColumnHeaders(fileDisplay.format());
-            if (fmtSpec == null) {
-                fmtSpec = createFormatSpec(headers);
-            }
-
-            System.out.printf("%s %s\n", filename, formattedDisk.getDiskName());
-            List<FileEntry> files = formattedDisk.getFiles();
-            if (files != null) {
-                showFiles(files, "", fmtSpec);
-            }
-            System.out.printf("%s format; %d bytes free; %d bytes used.\n",
-                formattedDisk.getFormat(),
-                formattedDisk.getFreeSpace(),
-                formattedDisk.getUsedSpace());
-            System.out.println();
-        }
+    public void showDisk(String filename) throws DiskUnrecognizedException, IOException {
+        FileStreamer.forDisk(filename)
+                    .ignoreErrors(true)
+                    .includeDeleted(deletedFlag)
+                    .recursive(recursiveFlag)
+                    .includeTypeOfFile(typeOfFile.typeOfFile())
+                    .matchGlobs(globs)
+                    .beforeDisk(this::header)
+                    .afterDisk(this::footer)
+                    .stream()
+                    .forEach(this::list);
     }
     
-    /**
-     * Recursive routine to display directory entries. In the instance of a
-     * system with directories (e.g. ProDOS), this really returns the first file
-     * with the given filename.
-     */
-    private void showFiles(List<FileEntry> files, String indent, List<String> fmtSpec) throws DiskException {
-        for (FileEntry entry : files) {
-            if (!deletedFlag && entry.isDeleted()) {
-                continue;
-            }
-            
-            List<String> data = entry.getFileColumnData(fileDisplay.format());
-            System.out.print(indent);
-            for (int d = 0; d < data.size(); d++) {
-                System.out.printf(fmtSpec.get(d), data.get(d));
-            }
-            if (entry.isDeleted()) {
-                System.out.print("[deleted]");
-            }
-            System.out.println();
-            
-            if (recursiveFlag && entry.isDirectory()) {
-                showFiles(((DirectoryEntry) entry).getFiles(), indent + "  ", fmtSpec);
-            }
+    protected void header(FormattedDisk disk) {
+        List<FileColumnHeader> headers = disk.getFileColumnHeaders(fileDisplay.format());
+        fmtSpec = createFormatSpec(headers);
+    
+        System.out.printf("File: %s\n", disk.getFilename());
+        System.out.printf("Disk: %s\n", disk.getDiskName());
+    }
+    
+    protected void list(FileTuple tuple) {
+        if (!deletedFlag && tuple.fileEntry.isDeleted()) {
+            return;
         }
+
+        List<String> data = tuple.fileEntry.getFileColumnData(fileDisplay.format());
+        for (int i=0; i<tuple.paths.size(); i++) { 
+            System.out.print("  ");
+        }
+        for (int d = 0; d < data.size(); d++) {
+            System.out.printf(fmtSpec.get(d), data.get(d));
+        }
+        if (tuple.fileEntry.isDeleted()) {
+            System.out.print("[deleted]");
+        }
+        System.out.println();
+    }
+    
+    protected void footer(FormattedDisk disk) {
+        System.out.printf("%s format; %d bytes free; %d bytes used.\n",
+                  disk.getFormat(),
+                  disk.getFreeSpace(),
+                  disk.getUsedSpace());
     }
     
     private List<String> createFormatSpec(List<FileColumnHeader> fileColumnHeaders) {
@@ -123,7 +129,8 @@ public class ListCommand implements Callable<Integer> {
         }
         return fmtSpec;
     }
-    
+
+    // FIXME
     public static class FileDisplay {
         public int format() {
             if (standardFormat) {
@@ -143,5 +150,24 @@ public class ListCommand implements Callable<Integer> {
         
         @Option(names = { "-l", "--long",  "--detail" }, description = "Use long/detailed directory format.")
         private boolean longFormat;
+    }
+    
+    // FIXME
+    public static class TypeOfFileSelection {
+        public TypeOfFile typeOfFile() {
+            if (filesOnly) {
+                return TypeOfFile.FILE;
+            }
+            if (directoriesOnly) {
+                return TypeOfFile.DIRECTORY;
+            }
+            return TypeOfFile.BOTH;
+        }
+        
+        @Option(names = "--file", description = "Only include files.")
+        private boolean filesOnly;
+        
+        @Option(names = "--directory", description = "Only include directories.")
+        private boolean directoriesOnly;
     }
 }
