@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 import com.webcodepro.applecommander.storage.FileEntry;
 import com.webcodepro.applecommander.storage.FileFilter;
@@ -26,7 +27,6 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParameterException;
 import picocli.CommandLine.Parameters;
-import picocli.CommandLine.ParentCommand;
 import picocli.CommandLine.Spec;
 
 @Command(name = "export", description = "Export file(s) from a disk image.",
@@ -35,8 +35,8 @@ import picocli.CommandLine.Spec;
         descriptionHeading = "%n",
         optionListHeading = "%nOptions:%n")
 public class ExportCommand implements Callable<Integer> {
-    @ParentCommand
-    private Main main;
+    private static Logger LOG = Logger.getLogger(ExportCommand.class.getName());
+
     @Spec
     private CommandSpec spec;
     
@@ -51,14 +51,17 @@ public class ExportCommand implements Callable<Integer> {
     @Option(names = { "--raw", "--binary" }, description = "Extract file in native format.")
     public void setBinaryExtraction(boolean flag) {
         this.extractFunction = this::asRawFile;
+        LOG.fine("Toggling binary output.");
     }
     @Option(names = { "--hex", "--dump" }, description = "Extract file in hex dump format.")
     public void setHexDumpExtraction(boolean flag) {
         this.extractFunction = this::asHexDumpFile;
+        LOG.fine("Toggling hex dump.");
     }
     @Option(names = { "--suggested" }, description = "Extract file as suggested by AppleCommander (default)")
     public void setSuggestedExtraction(boolean flag) {
         this.extractFunction = this::asSuggestedFile;
+        LOG.fine("Toggling file filter extraction.");
     }
     
     public FileFilter asRawFile(FileEntry entry) {
@@ -146,11 +149,11 @@ public class ExportCommand implements Callable<Integer> {
             if (!tuple.paths.isEmpty()) {
                 file = new File(outputFile, String.join(File.pathSeparator, tuple.paths));
                 boolean created = file.mkdirs();
-                if (created) main.logf("Directory created: %s\n", file.getPath());
+                if (created) LOG.info(String.format("Directory created: %s", file.getPath()));
             }
             file = new File(file, ff.getSuggestedFileName(tuple.fileEntry));
         }
-        main.logf("Writing to '%s'\n", file.getPath());
+        LOG.info(String.format("Writing to '%s'", file.getPath()));
         try (OutputStream out = new FileOutputStream(file)) {
             out.write(ff.filter(tuple.fileEntry));
         } catch (IOException e) {

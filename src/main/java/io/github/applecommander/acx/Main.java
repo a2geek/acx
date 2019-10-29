@@ -1,7 +1,10 @@
 package io.github.applecommander.acx;
 
-import com.webcodepro.applecommander.ui.UiBundle;
-import com.webcodepro.applecommander.util.TextBundle;
+import java.util.Collections;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -23,13 +26,28 @@ import picocli.CommandLine.Option;
             ExportCommand.class
     })
 public class Main {
-    TextBundle textBundle = UiBundle.getInstance();
+    private static Logger LOG = Logger.getLogger(Main.class.getName());
+    private static final Level LOG_LEVELS[] = { Level.OFF, Level.SEVERE, Level.WARNING, Level.INFO, 
+            Level.CONFIG, Level.FINE, Level.FINER, Level.FINEST };
+    
+    static {
+        Collections.list(LogManager.getLogManager().getLoggerNames())
+            .forEach(name -> LogManager.getLogManager().getLogger(name).setLevel(Level.OFF));
+    }
     
     @Option(names = { "--debug" }, description = "Show detailed stack traces.")
-    private boolean debugFlag;
+    private void enableStackTrace(boolean flag) {
+        Main.showError = t -> t.printStackTrace(System.err);
+    }
+    private static Consumer<Throwable> showError = t -> System.err.println(t.getLocalizedMessage()); 
     
-    @Option(names = { "-v", "--verbose" }, description = "Be verbose.")
-    private boolean verboseFlag;
+    @Option(names = { "-v", "--verbose" }, description = "Be verbose. Multiple occurrences increase logging.")
+    public void setVerbosity(boolean[] flag) {
+        int loglevel = Math.min(flag.length, LOG_LEVELS.length);
+        Level level = LOG_LEVELS[loglevel-1];
+        Collections.list(LogManager.getLogManager().getLoggerNames())
+            .forEach(name -> LogManager.getLogManager().getLogger(name).setLevel(level));
+    }
 
     public static void main(String[] args) {
         CommandLine cmd = new CommandLine(new Main());
@@ -38,26 +56,15 @@ public class Main {
             System.exit(1);
         }
         
-        int exitCode = cmd.execute(args);
-        System.exit(exitCode);
-    }
-
-    public void log(Throwable t) {
-        if (debugFlag) {
-            t.printStackTrace(System.err);
-        } else {
-            System.err.println(t.getLocalizedMessage());
-        }
-    }
-    public void logf(String format, String arg1, Throwable t) {
-        System.err.printf(format, arg1, t.getLocalizedMessage());
-        if (debugFlag) {
-            t.printStackTrace(System.err);
-        }
-    }
-    public void logf(String format, Object... args) {
-        if (verboseFlag) {
-            System.out.printf(format, args);
+        try {
+            LOG.fine("Command-line arguments: " + args);
+            int exitCode = cmd.execute(args);
+            LOG.info("Exiting with code " + exitCode);
+            LOG.fine("Log level was " + Logger.getGlobal().getLevel());
+            System.exit(exitCode);
+        } catch (Throwable t) {
+            showError.accept(t);
+            System.exit(-1);
         }
     }
 }

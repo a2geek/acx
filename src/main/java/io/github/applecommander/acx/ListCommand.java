@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.webcodepro.applecommander.storage.DiskUnrecognizedException;
 import com.webcodepro.applecommander.storage.FormattedDisk;
@@ -17,7 +19,6 @@ import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
-import picocli.CommandLine.ParentCommand;
 
 @Command(name = "list", description = "List directory of disk image(s).",
         aliases = { "ls" },
@@ -25,9 +26,8 @@ import picocli.CommandLine.ParentCommand;
         descriptionHeading = "%n",
         optionListHeading = "%nOptions:%n")
 public class ListCommand implements Callable<Integer> {
-    @ParentCommand
-    private Main main;
-    
+    private static Logger LOG = Logger.getLogger(ListCommand.class.getName());
+
     @Option(names = { "-h", "--help" }, description = "Show help for subcommand.", usageHelp = true)
     private boolean helpFlag;
 
@@ -68,7 +68,7 @@ public class ListCommand implements Callable<Integer> {
             try {
                 showDisk(filename);
             } catch (RuntimeException e) {
-                main.logf("%s: %s\n", filename, e);
+                LOG.log(Level.WARNING, filename, e);
             }
         }
         return 0;
