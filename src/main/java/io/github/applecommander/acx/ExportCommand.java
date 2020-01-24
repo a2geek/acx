@@ -22,6 +22,7 @@ import io.github.applecommander.filestreamer.FileStreamer;
 import io.github.applecommander.filestreamer.FileTuple;
 import io.github.applecommander.filestreamer.TypeOfFile;
 import io.github.applecommander.filters.RawFileFilter;
+import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -43,42 +44,21 @@ public class ExportCommand implements Callable<Integer> {
     @Option(names = { "-h", "--help" }, description = "Show help for subcommand.", usageHelp = true)
     private boolean helpFlag;
     
-// FIXME vvv Should be in @ArgGroup subclass; waiting on Picocli 4.0.5 to fix bug (?!)
-//    @ArgGroup(exclusive = true, heading = "File extract methods:")
-//    private FileExtractMethods extraction = new FileExtractMethods();
-    private Function<FileEntry,FileFilter> extractFunction = this::asSuggestedFile; 
+    @ArgGroup(exclusive = true, heading = "File extract methods:%n")
+    private FileExtractMethods extraction = new FileExtractMethods();
+    
+    // TODO - these require raw output and also modify the output file....
+//    @Option(names = { "--shk", "--shrinkit" }, description = "Extract file(s) to ShrinkIt archive.")
+//    public void setShkExtraction(boolean flag) {
+//        this.extractFunction = this::asShkFile;
+//        LOG.fine("Toggling SHK extraction.");
+//    }
+//    @Option(names = { "--as", "--applesingle" }, description = "Extract file to AppleSingle file.")
+//    public void setAppleSingleExtraction(boolean flag) {
+//        this.extractFunction = this::asAppleSingleFile;
+//        LOG.fine("Toggling AppleSingle extraction.");
+//    }
 
-    @Option(names = { "--raw", "--binary" }, description = "Extract file in native format.")
-    public void setBinaryExtraction(boolean flag) {
-        this.extractFunction = this::asRawFile;
-        LOG.fine("Toggling binary output.");
-    }
-    @Option(names = { "--hex", "--dump" }, description = "Extract file in hex dump format.")
-    public void setHexDumpExtraction(boolean flag) {
-        this.extractFunction = this::asHexDumpFile;
-        LOG.fine("Toggling hex dump.");
-    }
-    @Option(names = { "--suggested" }, description = "Extract file as suggested by AppleCommander (default)")
-    public void setSuggestedExtraction(boolean flag) {
-        this.extractFunction = this::asSuggestedFile;
-        LOG.fine("Toggling file filter extraction.");
-    }
-    
-    public FileFilter asRawFile(FileEntry entry) {
-        return new RawFileFilter();
-    }
-    public FileFilter asSuggestedFile(FileEntry entry) {
-        FileFilter ff = entry.getSuggestedFilter();
-        if (ff instanceof BinaryFileFilter) {
-            ff = new HexDumpFileFilter();
-        }
-        return ff;
-    }
-    public FileFilter asHexDumpFile(FileEntry entry) {
-        return new HexDumpFileFilter();
-    }
-// FIXME ^^^ Should be in subclass; waiting on Picocli 4.0.5 to fix bug (?!)
-    
     @Option(names = { "--deleted" }, description = "Include deleted files (use at your own risk!)")
     private boolean deletedFlag;
     
@@ -136,7 +116,7 @@ public class ExportCommand implements Callable<Integer> {
 
     public void writeToStdout(FileTuple tuple) {
         try {
-            FileFilter ff = extractFunction.apply(tuple.fileEntry);
+            FileFilter ff = extraction.extractFunction.apply(tuple.fileEntry);
             System.out.write(ff.filter(tuple.fileEntry));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -144,7 +124,7 @@ public class ExportCommand implements Callable<Integer> {
     }
     public void writeToOutput(FileTuple tuple) {
         File file = outputFile;
-        FileFilter ff = extractFunction.apply(tuple.fileEntry);
+        FileFilter ff = extraction.extractFunction.apply(tuple.fileEntry);
         if (file.isDirectory()) {
             if (!tuple.paths.isEmpty()) {
                 file = new File(outputFile, String.join(File.pathSeparator, tuple.paths));
@@ -161,34 +141,34 @@ public class ExportCommand implements Callable<Integer> {
         }
     }
 
-//    private static class FileExtractMethods {
-//        private Function<FileEntry,FileFilter> extractFunction = this::asSuggestedFile; 
-//
-//        @Option(names = { "--raw", "--binary" }, description = "Extract file in native format.")
-//        public void setBinaryExtraction(boolean flag) {
-//            this.extractFunction = this::asRawFile;
-//        }
-//        @Option(names = { "--hex", "--dump" }, description = "Extract file in hex dump format.")
-//        public void setHexDumpExtraction(boolean flag) {
-//            this.extractFunction = this::asHexDumpFile;
-//        }
-//        @Option(names = { "--suggested" }, description = "Extract file as suggested by AppleCommander (default)")
-//        public void setSuggestedExtraction(boolean flag) {
-//            this.extractFunction = this::asSuggestedFile;
-//        }
-//        
-//        public FileFilter asRawFile(FileEntry entry) {
-//            return new RawFileFilter();
-//        }
-//        public FileFilter asSuggestedFile(FileEntry entry) {
-//            FileFilter ff = entry.getSuggestedFilter();
-//            if (ff instanceof BinaryFileFilter) {
-//                ff = new HexDumpFileFilter();
-//            }
-//            return ff;
-//        }
-//        public FileFilter asHexDumpFile(FileEntry entry) {
-//            return new HexDumpFileFilter();
-//        }
-//    }
+    private static class FileExtractMethods {
+        private Function<FileEntry,FileFilter> extractFunction = this::asSuggestedFile; 
+
+        @Option(names = { "--raw", "--binary" }, description = "Extract file in native format.")
+        public void setBinaryExtraction(boolean flag) {
+            this.extractFunction = this::asRawFile;
+        }
+        @Option(names = { "--hex", "--dump" }, description = "Extract file in hex dump format.")
+        public void setHexDumpExtraction(boolean flag) {
+            this.extractFunction = this::asHexDumpFile;
+        }
+        @Option(names = { "--suggested" }, description = "Extract file as suggested by AppleCommander (default)")
+        public void setSuggestedExtraction(boolean flag) {
+            this.extractFunction = this::asSuggestedFile;
+        }
+        
+        public FileFilter asRawFile(FileEntry entry) {
+            return new RawFileFilter();
+        }
+        public FileFilter asSuggestedFile(FileEntry entry) {
+            FileFilter ff = entry.getSuggestedFilter();
+            if (ff instanceof BinaryFileFilter) {
+                ff = new HexDumpFileFilter();
+            }
+            return ff;
+        }
+        public FileFilter asHexDumpFile(FileEntry entry) {
+            return new HexDumpFileFilter();
+        }
+    }
 }
