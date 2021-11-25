@@ -71,6 +71,7 @@ public class ListCommand implements Callable<Integer> {
                 LOG.log(Level.WARNING, filename, e);
             }
         }
+        System.out.println();
         return 0;
     }
     
@@ -91,8 +92,9 @@ public class ListCommand implements Callable<Integer> {
         List<FileColumnHeader> headers = disk.getFileColumnHeaders(fileDisplay.format());
         fmtSpec = createFormatSpec(headers);
     
+        System.out.println();
         System.out.printf("File: %s\n", disk.getFilename());
-        System.out.printf("Disk: %s\n", disk.getDiskName());
+        System.out.printf("Name: %s\n", disk.getDiskName());
     }
     
     protected void list(FileTuple tuple) {
