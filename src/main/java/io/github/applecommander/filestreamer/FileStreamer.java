@@ -123,8 +123,11 @@ public class FileStreamer {
         return includeDeletedFlag || !tuple.fileEntry.isDeleted();
     }
     protected boolean globFilter(FileTuple tuple) {
-        FileSystem fs = FileSystems.getDefault();
-        Path path = Paths.get(String.join(fs.getSeparator(), tuple.paths), tuple.fileEntry.getFilename());
+    	if (tuple.fileEntry.isDirectory()) {
+    		// If we don't match directories, no files can be listed.
+    		return true;
+    	}
+        Path path = Paths.get(tuple.fileEntry.getFilename());
         for (PathMatcher pathMatcher : pathMatchers) {
             if (pathMatcher.matches(path)) return true;
         }

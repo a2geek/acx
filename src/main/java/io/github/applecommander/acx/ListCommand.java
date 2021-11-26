@@ -52,13 +52,12 @@ public class ListCommand implements Callable<Integer> {
     @Option(names = "--footer", negatable = true, description = "Show footer.")
     private boolean footerFlag = true;
 
-    @Parameters(index = "0", arity = "1..*", description = "Image(s) to process.")
+    @Option(names = "--globs", defaultValue = "*", split = ",", description = "File glob(s) to match.")
+    private List<String> globs = new ArrayList<String>();
+
+    @Parameters(arity = "1..*", description = "Image(s) to process.")
     private List<Path> paths = new ArrayList<Path>();
 
-    // Use "--" to separate
-    @Parameters(index = "1", arity = "*", description = "File glob(s) to match.")
-    private List<String> globs = new ArrayList<String>();
-    
     private List<String> fmtSpec;
 
     @Override
