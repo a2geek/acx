@@ -4,6 +4,9 @@ plugins {
     id 'application'
 }
 
+sourceCompatibility = 11
+targetCompatibility = 11
+
 repositories {
     mavenCentral()
 }
@@ -11,6 +14,7 @@ repositories {
 dependencies {
     implementation 'info.picocli:picocli:4.6.2'
     implementation 'net.sf.applecommander:AppleCommander:1.6.0'
+    implementation "net.sf.applecommander:applesingle-api:1.2.1"
     testImplementation 'junit:junit:4.12'
 }
 

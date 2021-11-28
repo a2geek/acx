@@ -21,6 +21,7 @@ import com.webcodepro.applecommander.storage.filters.HexDumpFileFilter;
 import io.github.applecommander.filestreamer.FileStreamer;
 import io.github.applecommander.filestreamer.FileTuple;
 import io.github.applecommander.filestreamer.TypeOfFile;
+import io.github.applecommander.filters.AppleSingleFileFilter;
 import io.github.applecommander.filters.RawFileFilter;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
@@ -52,11 +53,6 @@ public class ExportCommand implements Callable<Integer> {
 //    public void setShkExtraction(boolean flag) {
 //        this.extractFunction = this::asShkFile;
 //        LOG.fine("Toggling SHK extraction.");
-//    }
-//    @Option(names = { "--as", "--applesingle" }, description = "Extract file to AppleSingle file.")
-//    public void setAppleSingleExtraction(boolean flag) {
-//        this.extractFunction = this::asAppleSingleFile;
-//        LOG.fine("Toggling AppleSingle extraction.");
 //    }
 
     @Option(names = { "--deleted" }, description = "Include deleted files (use at your own risk!)")
@@ -156,6 +152,10 @@ public class ExportCommand implements Callable<Integer> {
         public void setSuggestedExtraction(boolean flag) {
             this.extractFunction = this::asSuggestedFile;
         }
+		@Option(names = { "--as", "--applesingle" }, description = "Extract file to AppleSingle file.")
+		public void setAppleSingleExtraction(boolean flag) {
+			this.extractFunction = this::asAppleSingleFile;
+		}
         
         public FileFilter asRawFile(FileEntry entry) {
             return new RawFileFilter();
@@ -169,6 +169,9 @@ public class ExportCommand implements Callable<Integer> {
         }
         public FileFilter asHexDumpFile(FileEntry entry) {
             return new HexDumpFileFilter();
+        }
+        public FileFilter asAppleSingleFile(FileEntry entry) {
+        	return new AppleSingleFileFilter();
         }
     }
 }
