@@ -48,13 +48,6 @@ public class ExportCommand implements Callable<Integer> {
     @ArgGroup(exclusive = true, heading = "File extract methods:%n")
     private FileExtractMethods extraction = new FileExtractMethods();
     
-    // TODO - these require raw output and also modify the output file....
-//    @Option(names = { "--shk", "--shrinkit" }, description = "Extract file(s) to ShrinkIt archive.")
-//    public void setShkExtraction(boolean flag) {
-//        this.extractFunction = this::asShkFile;
-//        LOG.fine("Toggling SHK extraction.");
-//    }
-
     @Option(names = { "--deleted" }, description = "Include deleted files (use at your own risk!)")
     private boolean deletedFlag;
     
