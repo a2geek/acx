@@ -1,7 +1,7 @@
 package io.github.applecommander.acx;
 
-import java.util.Collections;
 import java.util.function.Consumer;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -38,11 +38,11 @@ public class Main {
     	setAllLogLevels(Level.WARNING);
     }
     private static void setAllLogLevels(Level level) {
-        Collections.list(LogManager.getLogManager().getLoggerNames())
-        	.forEach(name -> {
-        		System.out.printf("%s = %s\n", name, level);
-        		LogManager.getLogManager().getLogger(name).setLevel(level);
-        	});
+    	Logger rootLogger = LogManager.getLogManager().getLogger("");
+		rootLogger.setLevel(level);
+		for (Handler handler : rootLogger.getHandlers()) {
+		    handler.setLevel(level);
+		}
     }
     
     @Option(names = { "--debug" }, description = "Show detailed stack traces.")
@@ -72,7 +72,6 @@ public class Main {
         }
         
         try {
-            LOG.fine("Command-line arguments: " + args);
             LOG.info(() -> String.format("Log level set to %s.", Logger.getGlobal().getLevel()));
             int exitCode = cmd.execute(args);
             LOG.fine("Exiting with code " + exitCode);
