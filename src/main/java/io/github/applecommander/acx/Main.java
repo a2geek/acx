@@ -20,10 +20,13 @@ import picocli.CommandLine.Option;
     optionListHeading = "%nOptions:%n",
     description = "'ac' experimental utility", 
     subcommands = {
+    		DeleteCommand.class,
+            ExportCommand.class,
             HelpCommand.class,
             InfoCommand.class,
             ListCommand.class,
-            ExportCommand.class
+            LockCommand.class,
+            UnlockCommand.class
     })
 public class Main {
     private static Logger LOG = Logger.getLogger(Main.class.getName());
@@ -31,8 +34,15 @@ public class Main {
             Level.CONFIG, Level.FINE, Level.FINER, Level.FINEST };
     
     static {
+    	System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s%n");
+    	setAllLogLevels(Level.WARNING);
+    }
+    private static void setAllLogLevels(Level level) {
         Collections.list(LogManager.getLogManager().getLoggerNames())
-            .forEach(name -> LogManager.getLogManager().getLogger(name).setLevel(Level.OFF));
+        	.forEach(name -> {
+        		System.out.printf("%s = %s\n", name, level);
+        		LogManager.getLogManager().getLogger(name).setLevel(level);
+        	});
     }
     
     @Option(names = { "--debug" }, description = "Show detailed stack traces.")
@@ -43,10 +53,15 @@ public class Main {
     
     @Option(names = { "-v", "--verbose" }, description = "Be verbose. Multiple occurrences increase logging.")
     public void setVerbosity(boolean[] flag) {
-        int loglevel = Math.min(flag.length, LOG_LEVELS.length);
+    	// The "+ 2" is due to the default of the levels
+        int loglevel = Math.min(flag.length + 2, LOG_LEVELS.length);
         Level level = LOG_LEVELS[loglevel-1];
-        Collections.list(LogManager.getLogManager().getLoggerNames())
-            .forEach(name -> LogManager.getLogManager().getLogger(name).setLevel(level));
+        setAllLogLevels(level);
+    }
+    
+    @Option(names = { "--quiet" }, description = "Turn off all logging.")
+    public void setQuiet(boolean flag) {
+    	setAllLogLevels(Level.OFF);
     }
 
     public static void main(String[] args) {
@@ -58,9 +73,9 @@ public class Main {
         
         try {
             LOG.fine("Command-line arguments: " + args);
+            LOG.info(() -> String.format("Log level set to %s.", Logger.getGlobal().getLevel()));
             int exitCode = cmd.execute(args);
-            LOG.info("Exiting with code " + exitCode);
-            LOG.fine("Log level was " + Logger.getGlobal().getLevel());
+            LOG.fine("Exiting with code " + exitCode);
             System.exit(exitCode);
         } catch (Throwable t) {
             showError.accept(t);
