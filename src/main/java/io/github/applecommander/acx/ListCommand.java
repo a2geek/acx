@@ -131,7 +131,6 @@ public class ListCommand implements Callable<Integer> {
         return fmtSpec;
     }
 
-    // FIXME
     public static class FileDisplay {
         public int format() {
             if (standardFormat) {
@@ -153,7 +152,6 @@ public class ListCommand implements Callable<Integer> {
         private boolean longFormat;
     }
     
-    // FIXME
     public static class TypeOfFileSelection {
         public TypeOfFile typeOfFile() {
             if (filesOnly) {
