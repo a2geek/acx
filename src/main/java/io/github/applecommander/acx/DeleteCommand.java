@@ -11,7 +11,7 @@ import picocli.CommandLine.Option;
         parameterListHeading = "%nParameters:%n",
         descriptionHeading = "%n",
         optionListHeading = "%nOptions:%n")
-public class DeleteCommand extends ModifyingCommand {
+public class DeleteCommand extends ModifyingCommandWithGlobs {
     private static Logger LOG = Logger.getLogger(DeleteCommand.class.getName());
     
     @Option(names = { "-f", "--force" }, description = "Force delete locked files.")

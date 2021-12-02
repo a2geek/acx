@@ -26,6 +26,7 @@ import picocli.CommandLine.Option;
             InfoCommand.class,
             ListCommand.class,
             LockCommand.class,
+            RenameCommand.class,
             UnlockCommand.class
     })
 public class Main {

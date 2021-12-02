@@ -9,7 +9,7 @@ import picocli.CommandLine.Command;
         parameterListHeading = "%nParameters:%n",
         descriptionHeading = "%n",
         optionListHeading = "%nOptions:%n")
-public class UnlockCommand extends ModifyingCommand {
+public class UnlockCommand extends ModifyingCommandWithGlobs {
     private static Logger LOG = Logger.getLogger(UnlockCommand.class.getName());
 
     public void fileHandler(FileTuple tuple) {
