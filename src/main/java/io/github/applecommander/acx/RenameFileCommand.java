@@ -16,8 +16,8 @@ import picocli.CommandLine.Parameters;
         parameterListHeading = "%nParameters:%n",
         descriptionHeading = "%n",
         optionListHeading = "%nOptions:%n")
-public class RenameCommand extends ModifyingCommand {
-    private static Logger LOG = Logger.getLogger(RenameCommand.class.getName());
+public class RenameFileCommand extends ModifyingCommand {
+    private static Logger LOG = Logger.getLogger(RenameFileCommand.class.getName());
     
     @Option(names = { "-m", "--multiple" }, description = "Force rename when multiple files found.")
     private boolean multipleOverride;

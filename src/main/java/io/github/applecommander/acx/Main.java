@@ -26,7 +26,8 @@ import picocli.CommandLine.Option;
             InfoCommand.class,
             ListCommand.class,
             LockCommand.class,
-            RenameCommand.class,
+            RenameFileCommand.class,
+            RenameDiskCommand.class,
             UnlockCommand.class
     })
 public class Main {
