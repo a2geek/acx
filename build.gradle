@@ -15,7 +15,8 @@ dependencies {
     implementation 'info.picocli:picocli:4.6.2'
     implementation 'net.sf.applecommander:AppleCommander:1.6.0'
     implementation "net.sf.applecommander:applesingle-api:1.2.1"
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
 
 application {
@@ -23,7 +24,7 @@ application {
 }
 
 test {
-    useJUnit()
+    useJUnitPlatform()
 }
 
 bootJar {
