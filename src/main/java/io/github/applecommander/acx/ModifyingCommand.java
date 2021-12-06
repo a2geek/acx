@@ -17,25 +17,25 @@ public abstract class ModifyingCommand implements Callable<Integer> {
     @Option(names = { "-h", "--help" }, description = "Show help for subcommand.", usageHelp = true)
     private boolean helpFlag;
 
-    @Parameters(index = "0", description = "Image to process.")
+    @Parameters(index = "0", description = "Image to process.", defaultValue = "${ACX_DISK_NAME}")
     protected File image;
     
     public void saveDisk(FileTuple tuple) {
-    	saveDisk(tuple.formattedDisk);
+        saveDisk(tuple.formattedDisk);
     }
     
     public void saveDisk(FormattedDisk disk) {
-    	try {
-    		// Only save if there are changes.
-    		if (disk.getDiskImageManager().hasChanged()) {
-    			LOG.fine(() -> String.format("Saving disk '%s'", disk.getFilename()));
-    			disk.save();
-    		} else {
-    			LOG.fine(() -> String.format("Disk '%s' has not changed; not saving.", disk.getFilename()));
-    		}
-		} catch (IOException e) {
-			LOG.severe(e.getMessage());
-		}
+        try {
+            // Only save if there are changes.
+            if (disk.getDiskImageManager().hasChanged()) {
+                LOG.fine(() -> String.format("Saving disk '%s'", disk.getFilename()));
+                disk.save();
+            } else {
+                LOG.fine(() -> String.format("Disk '%s' has not changed; not saving.", disk.getFilename()));
+            }
+        } catch (IOException e) {
+            LOG.severe(e.getMessage());
+        }
     }
 
 }

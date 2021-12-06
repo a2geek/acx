@@ -20,6 +20,7 @@ import picocli.CommandLine.Option;
     optionListHeading = "%nOptions:%n",
     description = "'ac' experimental utility", 
     subcommands = {
+    		CreateDiskCommand.class,
     		DeleteCommand.class,
             ExportCommand.class,
             HelpCommand.class,
