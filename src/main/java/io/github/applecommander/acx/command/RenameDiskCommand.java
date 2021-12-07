@@ -1,4 +1,4 @@
-package io.github.applecommander.acx;
+package io.github.applecommander.acx.command;
 
 import java.util.logging.Logger;
 
@@ -7,6 +7,7 @@ import com.webcodepro.applecommander.storage.FormattedDisk;
 import com.webcodepro.applecommander.storage.os.pascal.PascalFormatDisk;
 import com.webcodepro.applecommander.storage.os.prodos.ProdosFormatDisk;
 
+import io.github.applecommander.acx.ModifyingCommand;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 

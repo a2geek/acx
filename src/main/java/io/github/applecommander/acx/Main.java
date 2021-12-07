@@ -6,6 +6,15 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import io.github.applecommander.acx.command.CreateDiskCommand;
+import io.github.applecommander.acx.command.DeleteCommand;
+import io.github.applecommander.acx.command.ExportCommand;
+import io.github.applecommander.acx.command.InfoCommand;
+import io.github.applecommander.acx.command.ListCommand;
+import io.github.applecommander.acx.command.LockCommand;
+import io.github.applecommander.acx.command.RenameDiskCommand;
+import io.github.applecommander.acx.command.RenameFileCommand;
+import io.github.applecommander.acx.command.UnlockCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.HelpCommand;

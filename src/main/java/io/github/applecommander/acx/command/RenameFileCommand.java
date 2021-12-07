@@ -1,9 +1,10 @@
-package io.github.applecommander.acx;
+package io.github.applecommander.acx.command;
 
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import io.github.applecommander.acx.ModifyingCommand;
 import io.github.applecommander.filestreamer.FileStreamer;
 import io.github.applecommander.filestreamer.FileTuple;
 import io.github.applecommander.filestreamer.TypeOfFile;

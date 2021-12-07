@@ -1,7 +1,8 @@
-package io.github.applecommander.acx;
+package io.github.applecommander.acx.command;
 
 import java.util.logging.Logger;
 
+import io.github.applecommander.acx.ModifyingCommandWithGlobs;
 import io.github.applecommander.filestreamer.FileTuple;
 import picocli.CommandLine.Command;
 

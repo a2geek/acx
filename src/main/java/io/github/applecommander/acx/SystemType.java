@@ -23,7 +23,7 @@ public enum SystemType {
 	PRODOS(SystemType::createProdosImageOrder, SystemType::copyProdosSystemFiles),
 	PASCAL(SystemType::createProdosImageOrder, SystemType::copyPascalSystemFiles);
 	
-    private static Logger LOG = Logger.getLogger(CreateDiskCommand.class.getName());
+    private static Logger LOG = Logger.getLogger(SystemType.class.getName());
 
 	private Function<Integer,ImageOrder> createImageOrderFn;
 	private BiConsumer<FormattedDisk,FormattedDisk> copySystemFn;

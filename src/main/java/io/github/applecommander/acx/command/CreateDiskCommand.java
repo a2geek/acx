@@ -1,4 +1,4 @@
-package io.github.applecommander.acx;
+package io.github.applecommander.acx.command;
 
 import java.util.logging.Logger;
 
@@ -11,6 +11,8 @@ import com.webcodepro.applecommander.storage.os.pascal.PascalFormatDisk;
 import com.webcodepro.applecommander.storage.os.prodos.ProdosFormatDisk;
 import com.webcodepro.applecommander.storage.physical.ImageOrder;
 
+import io.github.applecommander.acx.ModifyingCommand;
+import io.github.applecommander.acx.SystemType;
 import io.github.applecommander.acx.converter.DataSizeConverter;
 import io.github.applecommander.acx.converter.SystemTypeConverter;
 import picocli.CommandLine.Command;

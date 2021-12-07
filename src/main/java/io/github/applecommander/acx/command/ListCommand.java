@@ -1,4 +1,4 @@
-package io.github.applecommander.acx;
+package io.github.applecommander.acx.command;
 
 import java.io.IOException;
 import java.nio.file.Path;
