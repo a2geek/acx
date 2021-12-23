@@ -62,7 +62,7 @@ public class CreateDiskCommand extends ModifyingCommand {
     		break;
     	}
     	
-    	if (diskName != null) {
+    	if (formatSource != null) {
     		Disk systemSource = new Disk(formatSource);
     		type.copySystem(disks[0], systemSource.getFormattedDisks()[0]);
     	}

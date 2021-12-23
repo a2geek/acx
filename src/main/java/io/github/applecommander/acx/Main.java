@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import io.github.applecommander.acx.command.CopyFileCommand;
 import io.github.applecommander.acx.command.CreateDiskCommand;
 import io.github.applecommander.acx.command.DeleteCommand;
 import io.github.applecommander.acx.command.ExportCommand;
@@ -29,6 +30,7 @@ import picocli.CommandLine.Option;
     optionListHeading = "%nOptions:%n",
     description = "'ac' experimental utility", 
     subcommands = {
+            CopyFileCommand.class,
     		CreateDiskCommand.class,
     		DeleteCommand.class,
             ExportCommand.class,

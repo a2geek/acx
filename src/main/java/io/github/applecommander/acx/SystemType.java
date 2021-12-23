@@ -6,15 +6,16 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 
 import com.webcodepro.applecommander.storage.DiskException;
+import com.webcodepro.applecommander.storage.FileEntry;
 import com.webcodepro.applecommander.storage.FormattedDisk;
 import com.webcodepro.applecommander.storage.os.dos33.DosFormatDisk;
-import com.webcodepro.applecommander.storage.os.prodos.ProdosFileEntry;
 import com.webcodepro.applecommander.storage.physical.ByteArrayImageLayout;
 import com.webcodepro.applecommander.storage.physical.DosOrder;
 import com.webcodepro.applecommander.storage.physical.ImageOrder;
 import com.webcodepro.applecommander.storage.physical.ProdosOrder;
 
 import io.github.applecommander.acx.converter.DataSizeConverter;
+import io.github.applecommander.acx.fileutil.FileUtils;
 
 public enum SystemType {
 	DOS(SystemType::createDosImageOrder, SystemType::copyDosSystemTracks),
@@ -77,14 +78,8 @@ public enum SystemType {
 		
 		try {
 			for (String filename : Arrays.asList("PRODOS", "BASIC.SYSTEM")) {
-				ProdosFileEntry sourceFile = (ProdosFileEntry)source.getFile(filename);
-				ProdosFileEntry targetFile = (ProdosFileEntry)target.createFile();
-				targetFile.setFilename(sourceFile.getFilename());
-				targetFile.setFiletype(sourceFile.getFiletypeByte());
-				targetFile.setAuxiliaryType(sourceFile.getAuxiliaryType());
-				targetFile.setLocked(sourceFile.isLocked());
-				targetFile.setCreationDate(sourceFile.getCreationDate());
-				targetFile.setFileData(sourceFile.getFileData());
+                FileEntry sourceFile = source.getFile(filename);
+			    FileUtils.copy(target, sourceFile);
 			}
 		} catch (DiskException e) {
 			throw new RuntimeException(e);
