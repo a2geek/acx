@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import io.github.applecommander.acx.command.CopyFileCommand;
 import io.github.applecommander.acx.command.CreateDiskCommand;
 import io.github.applecommander.acx.command.DeleteCommand;
+import io.github.applecommander.acx.command.DiskMapCommand;
 import io.github.applecommander.acx.command.ExportCommand;
 import io.github.applecommander.acx.command.InfoCommand;
 import io.github.applecommander.acx.command.ListCommand;
@@ -35,6 +36,7 @@ import picocli.CommandLine.Option;
             CopyFileCommand.class,
     		CreateDiskCommand.class,
     		DeleteCommand.class,
+    		DiskMapCommand.class,
             ExportCommand.class,
             HelpCommand.class,
             InfoCommand.class,
