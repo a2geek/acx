@@ -1,6 +1,5 @@
 package io.github.applecommander.acx;
 
-import java.util.function.Consumer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -65,11 +64,9 @@ public class Main {
 		}
     }
     
+    // This flag is read in PrintExceptionMessageHandler.
     @Option(names = { "--debug" }, description = "Show detailed stack traces.")
-    private void enableStackTrace(boolean flag) {
-        Main.showError = t -> t.printStackTrace(System.err);
-    }
-    private static Consumer<Throwable> showError = t -> System.err.println(t.getLocalizedMessage()); 
+    static boolean enableStackTrace;
     
     @Option(names = { "-v", "--verbose" }, description = "Be verbose. Multiple occurrences increase logging.")
     public void setVerbosity(boolean[] flag) {
@@ -86,19 +83,15 @@ public class Main {
 
     public static void main(String[] args) {
         CommandLine cmd = new CommandLine(new Main());
+        cmd.setExecutionExceptionHandler(new PrintExceptionMessageHandler());
         if (args.length == 0) {
             cmd.usage(System.out);
             System.exit(1);
         }
         
-        try {
-            LOG.info(() -> String.format("Log level set to %s.", Logger.getGlobal().getLevel()));
-            int exitCode = cmd.execute(args);
-            LOG.fine("Exiting with code " + exitCode);
-            System.exit(exitCode);
-        } catch (Throwable t) {
-            showError.accept(t);
-            System.exit(-1);
-        }
+        LOG.info(() -> String.format("Log level set to %s.", Logger.getGlobal().getLevel()));
+        int exitCode = cmd.execute(args);
+        LOG.fine("Exiting with code " + exitCode);
+        System.exit(exitCode);
     }
 }
