@@ -37,8 +37,8 @@ public class DiskMapCommand implements Callable<Integer> {
         final int width,height;
         final Function<Integer,Integer> leftNumFn, rightNumFn; 
         if (dimensions != null && dimensions.length == 2) {
-            width = dimensions[0];
-            height = dimensions[1];
+            height = dimensions[0];
+            width = dimensions[1];
             // This is expected to be Track, so same number on left and right.
             leftNumFn = rightNumFn = i -> i;
         } else {
@@ -50,6 +50,7 @@ public class DiskMapCommand implements Callable<Integer> {
             rightNumFn = i -> (i + 1) * width - 1;
         }
         
+        title(formattedDisk.getBitmapLabels());
         header1(width); // 10's position
         header2(width); // 1's position
         header3(width); // divider
@@ -74,22 +75,32 @@ public class DiskMapCommand implements Callable<Integer> {
         header1(width);
     }
     
+    void title(String[] labels) {
+        System.out.print("      ");
+        if (labels.length == 2) {
+            System.out.printf("X=%s, Y=%s", labels[1], labels[0]);
+        }
+        else {
+            System.out.printf("By %s", String.join(", ", labels));
+        }
+        System.out.println();
+    }
     void header1(final int width) {
-        System.out.print("     ");
+        System.out.print("      ");
         for (int i=0; i<width; i++) {
             System.out.print(i % 10 == 0 ? Character.forDigit(i%10, 10) : ' ');
         }
         System.out.println();
     }
     void header2(final int width) {
-        System.out.print("     ");
+        System.out.print("      ");
         for (int i=0; i<width; i++) {
             System.out.print(i%10);
         }
         System.out.println();
     }
     void header3(final int width) {
-        System.out.print("     ");
+        System.out.print("      ");
         for (int i=0; i<width; i++) {
             System.out.print(i%5 == 0 ? '+' : '-');
         }
