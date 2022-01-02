@@ -13,6 +13,8 @@ public interface FileEntryWriter {
     public default void setProdosFiletype(String filetype)          { }
     public default void setLocked(boolean flag)                     { }
     public default void setFileData(byte[] data)                    { }
+    // Special case for GS/OS files (uglifies API; sets 0x05)
+    public default void setFileData(byte[] data, byte[] resource)   { }
     /** 
      * The address embedded in binary objects. 
      * This varies by DOS's so is split apart. 

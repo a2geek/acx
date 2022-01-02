@@ -32,7 +32,7 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
 @Command(name = "export", description = "Export file(s) from a disk image.",
-        aliases = "x",
+        aliases = { "x", "get" },
         parameterListHeading = "%nParameters:%n",
         descriptionHeading = "%n",
         optionListHeading = "%nOptions:%n")

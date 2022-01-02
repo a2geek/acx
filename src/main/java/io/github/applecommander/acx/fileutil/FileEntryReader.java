@@ -16,6 +16,7 @@ public interface FileEntryReader {
     public default Optional<String> getProdosFiletype()             { return Optional.empty(); }
     public default Optional<Boolean> isLocked()                     { return Optional.empty(); }
     public default Optional<byte[]> getFileData()                   { return Optional.empty(); }
+    public default Optional<byte[]> getResourceData()               { return Optional.empty(); }
     /** 
      * The address embedded in binary objects. 
      * This varies by DOS's so is split apart. 

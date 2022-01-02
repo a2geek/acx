@@ -11,8 +11,14 @@ import io.github.applecommander.acx.command.CopyFileCommand;
 
 public class FileUtils {
     private static Logger LOG = Logger.getLogger(CopyFileCommand.class.getName());
+    
+    private boolean overwrite;
+    
+    public FileUtils(boolean overwrite) {
+        this.overwrite = overwrite;
+    }
 
-    public static void copy(DirectoryEntry directory, FileEntry file) throws DiskException {
+    public void copy(DirectoryEntry directory, FileEntry file) throws DiskException {
         LOG.fine(() -> String.format("Copying '%s'", file.getFilename()));
 		if (file.isDeleted()) {
 			// Skip deleted files
@@ -25,7 +31,7 @@ public class FileUtils {
 		}
 	}
 	
-	static void copyDirectory(DirectoryEntry targetParent, DirectoryEntry sourceDir, String name) throws DiskException {
+	void copyDirectory(DirectoryEntry targetParent, DirectoryEntry sourceDir, String name) throws DiskException {
 	    Optional<FileEntry> targetFile = targetParent.getFiles()
 	            .stream()
 	            .filter(fileEntry -> name.equals(fileEntry.getFilename()))
@@ -52,19 +58,44 @@ public class FileUtils {
         }
 	}
 	
-	static void copyFile(DirectoryEntry directory, FileEntry sourceFile) throws DiskException {
-	    FileEntry targetFile = directory.createFile();
+    void copyFile(DirectoryEntry directory, FileEntry sourceFile) throws DiskException {
+        FileEntryReader source = FileEntryReader.get(sourceFile);
+        copyFile(directory, source);
+	}
+	
+	public void copyFile(DirectoryEntry directory, FileEntryReader source) throws DiskException {
+	    String sourceName = source.getFilename().get();
+	    String sanitizedName = directory.getFormattedDisk().getSuggestedFilename(sourceName);
+	    final Optional<FileEntry> fileEntry = directory.getFiles().stream()
+	        .filter(entry -> entry.getFilename().equals(sanitizedName))
+	        .findFirst();
+
+        final FileEntry targetFile;
+        if (fileEntry.isPresent()) {
+            targetFile = fileEntry
+                    .filter(entry -> overwrite)
+                    .orElseThrow(() -> new RuntimeException(String.format("File '%s' exists.", 
+                            source.getFilename().get())));
+	    }
+	    else {
+	        targetFile = directory.createFile();
+	    }
+	    
 	    FileEntryWriter target = FileEntryWriter.get(targetFile);
-	    FileEntryReader source = FileEntryReader.get(sourceFile);
 	    
 	    source.getFilename().ifPresent(target::setFilename);
 	    source.getProdosFiletype().ifPresent(target::setProdosFiletype);
 	    source.isLocked().ifPresent(target::setLocked);
-	    source.getFileData().ifPresent(target::setFileData);
 	    source.getBinaryAddress().ifPresent(target::setBinaryAddress);
 	    source.getBinaryLength().ifPresent(target::setBinaryLength);
 	    source.getAuxiliaryType().ifPresent(target::setAuxiliaryType);
 	    source.getCreationDate().ifPresent(target::setCreationDate);
 	    source.getLastModificationDate().ifPresent(target::setLastModificationDate);
+
+        if (source.getFileData().isPresent() && source.getResourceData().isPresent()) {
+            target.setFileData(source.getFileData().get(), source.getResourceData().get());
+        } else {
+            source.getFileData().ifPresent(target::setFileData);
+        }
 	}
 }

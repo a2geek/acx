@@ -38,10 +38,13 @@ public class CopyFileCommand implements Callable<Integer> {
     @Option(names = { "-r", "--recursive" }, description = "Copy files recursively.")
     private boolean recursiveFlag;
     
+    @Option(names = { "-f", "--force" }, description = "Overwrite existing files.")
+    private boolean overwriteFlag;
+    
     @Option(names = { "--to", "--directory" }, description = "Specify which directory to place files.")
     private String targetPath;
     
-    @Option(names = { "-f", "--from", "--source" }, description = "Source disk for files.", 
+    @Option(names = { "-s", "--from", "--source" }, description = "Source disk for files.", 
             converter = DiskConverter.class, required = true)
     private Disk sourceDisk;
     
@@ -75,7 +78,8 @@ public class CopyFileCommand implements Callable<Integer> {
             if (!recursiveFlag && tuple.fileEntry.isDirectory()) {
                 formattedDisk.createDirectory(tuple.fileEntry.getFilename());
             } else {
-                FileUtils.copy(formattedDisk, tuple.fileEntry);
+                FileUtils copier = new FileUtils(overwriteFlag);
+                copier.copy(formattedDisk, tuple.fileEntry);
             }
         } catch (DiskException ex) {
             LOG.severe(ex.getMessage());

@@ -77,9 +77,10 @@ public enum SystemType {
 		target.writeBlock(1, source.readBlock(1));
 		
 		try {
+            FileUtils copier = new FileUtils(false);
 			for (String filename : Arrays.asList("PRODOS", "BASIC.SYSTEM")) {
                 FileEntry sourceFile = source.getFile(filename);
-			    FileUtils.copy(target, sourceFile);
+			    copier.copy(target, sourceFile);
 			}
 		} catch (DiskException e) {
 			throw new RuntimeException(e);

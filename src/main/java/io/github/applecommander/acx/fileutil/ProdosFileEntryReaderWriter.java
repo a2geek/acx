@@ -52,6 +52,17 @@ public class ProdosFileEntryReaderWriter implements FileEntryReader, FileEntryWr
             throw new RuntimeException(e);
         }
     }
+    @Override
+    public void setFileData(byte[] data, byte[] resource) {
+        try {
+            // If we have a resource fork in addition to a data fork,
+            // then we've got a GSOS storage type $5. 
+            fileEntry.setFileData(data, resource);
+            fileEntry.setStorageType(0x05);
+        } catch (DiskFullException e) {
+            throw new RuntimeException(e);
+        }
+    }
     
     @Override
     public Optional<Integer> getBinaryAddress() {
