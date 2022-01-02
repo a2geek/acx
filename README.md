@@ -5,21 +5,35 @@ This is a revamp of the venerable `ac` command-line utility with a more modern c
 # Usage
 
 ```
-$ acx
-Usage: acx [-hV] [--debug] [COMMAND]
+$ acx --help                                                                    
+Usage: acx [-hVv] [--debug] [--quiet] [COMMAND]
 
 'ac' experimental utility
 
 Options:
       --debug     Show detailed stack traces.
   -h, --help      Show this help message and exit.
+      --quiet     Turn off all logging.
+  -v, --verbose   Be verbose. Multiple occurrences increase logging.
   -V, --version   Print version information and exit.
 
 Commands:
-  help       Displays help information about the specified command
-  info, i    Show information on a disk image(s).
-  list, ls   List directory of disk image(s).
-  export, x  Export file(s) from a disk image.
+  convert          Uncompress a ShrinkIt or Binary II file;
+  copy, cp         Copy files between disks.
+  create, mkdisk   Rename volume of a disk image.
+  delete, del, rm  Delete file(s) from a disk image.
+  diskmap, map     Show disk usage map.
+  export, x, get   Export file(s) from a disk image.
+  help             Displays help information about the specified command
+  import, put      Import file onto disk.
+  info, i          Show information on a disk image(s).
+  list, ls         List directory of disk image(s).
+  lock             Lock file(s) on a disk image.
+  mkdir, md        Create a directory on disk.
+  rename, ren      Rename file on a disk image.
+  rename-disk      Rename volume of a disk image.
+  rmdir, rd        Remove a directory on disk.
+  unlock           Unlock file(s) on a disk image.
 ```
 
 ## Info
@@ -60,7 +74,9 @@ Sectors On Disk: 16
 
 ```
 $ acx list --help
-Usage: acx list [[-n] | [-s] | [-l]] [-hr] [--deleted] <paths>...
+Usage: acx list [-hr] [--[no-]column] [--deleted] [--[no-]footer] [--[no-]
+                header] [--globs=<globs>[,<globs>...]]... [-n | -s | -l]
+                [--file | --directory] <paths>...
 
 List directory of disk image(s).
 
@@ -68,8 +84,15 @@ Parameters:
       <paths>...            Image(s) to process.
 
 Options:
+      --[no-]column         Show column headers.
       --deleted             Show deleted files.
+      --directory           Only include directories.
+      --file                Only include files.
+      --[no-]footer         Show footer.
+      --globs=<globs>[,<globs>...]
+                            File glob(s) to match.
   -h, --help                Show help for subcommand.
+      --[no-]header         Show header.
   -r, --[no-]recursive      Display directory recursively.
 File display formatting:
   -l, --long, --detail      Use long/detailed directory format.
@@ -78,15 +101,15 @@ File display formatting:
 ```
 
 ```
-$ acx list --no-recursive ~/Downloads/3476_dimg.bin 
-/home/rob/Downloads/3476_dimg.bin /SYSTEM.DISK/
-  PRODOS          SYS      004 08/18/1988 08/18/1988      1,452 A=$2000  
-  SYSTEM          DIR      001 08/10/0101 08/18/1988        512          
-  FINDER.DEF      FND      001 07/07/1988 08/04/1987         82          
-  ICONS           DIR      001 07/21/1988 07/21/1988        512          
-  FINDER.DATA     FND      001 07/11/2001 06/14/1988        216          
-  APPLETALK       DIR      001 07/10/2001 08/18/1988        512          
-  BASIC.SYSTEM    SYS      021 12/14/1987 12/14/1987     10,240          
-  BASIC.LAUNCHER  SYS      003 07/12/1987 07/12/1987        915 A=$0800  
-ProDOS format; 365568 bytes free; 453632 bytes used.
+$ acx list --no-recursive DEVCD.HDV 
+File: DEVCD.HDV
+Name: /DEV.CD/
+  TOOLS           DIR      002 06/25/1990 04/13/1989      1,024          
+  II.DISK.CENTRAL DIR      001 06/25/1990 04/13/1989        512          
+  UTILITIES       DIR      002 06/25/1990 04/13/1989      1,024          
+  READ.ME.FIRST   DIR      001 06/25/1990 04/21/1989        512          
+  GUIDED.TOURS    DIR      001 06/25/1990 04/13/1989        512          
+  FINDER.DATA     FND      001 06/25/1990 10/12/1989        172          
+  DEVELOP         DIR      001 07/05/1990 06/25/1990        512          
+ProDOS format; 1701376 bytes free; 19270144 bytes used.
 ```
