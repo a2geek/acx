@@ -13,15 +13,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
 import com.webcodepro.applecommander.storage.DirectoryEntry;
-import com.webcodepro.applecommander.storage.Disk;
-import com.webcodepro.applecommander.storage.DiskUnrecognizedException;
 import com.webcodepro.applecommander.storage.FileEntry;
-import com.webcodepro.applecommander.storage.FormattedDisk;
 import com.webcodepro.applecommander.storage.os.prodos.ProdosFormatDisk;
 import com.webcodepro.applecommander.util.AppleUtil;
 import com.webcodepro.applecommander.util.StreamUtil;
@@ -30,7 +26,7 @@ import com.webcodepro.shrinkit.HeaderBlock;
 import com.webcodepro.shrinkit.NuFileArchive;
 import com.webcodepro.shrinkit.ThreadRecord;
 
-import io.github.applecommander.acx.converter.DiskConverter;
+import io.github.applecommander.acx.base.ReadWriteDiskCommandOptions;
 import io.github.applecommander.acx.converter.IntegerTypeConverter;
 import io.github.applecommander.acx.fileutil.FileEntryReader;
 import io.github.applecommander.acx.fileutil.FileUtils;
@@ -50,20 +46,10 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "import", description = "Import file onto disk.",
-         aliases = { "put" },
-         parameterListHeading = "%nParameters:%n",
-         descriptionHeading = "%n",
-         optionListHeading = "%nOptions:%n")
-public class ImportCommand implements Callable<Integer> {
+         aliases = { "put" })
+public class ImportCommand extends ReadWriteDiskCommandOptions {
     private static Logger LOG = Logger.getLogger(ImportCommand.class.getName());
 
-    @Option(names = { "-h", "--help" }, description = "Show help for subcommand.", usageHelp = true)
-    private boolean helpFlag;
-
-    @Option(names = { "-d", "--disk" }, description = "Image to process.", required = true,
-            converter = DiskConverter.class, defaultValue = "${ACX_DISK_NAME}")
-    private Disk disk;
-    
     @ArgGroup(heading = "%nInput source:%n", multiplicity = "1")
     private InputData inputData;
 
@@ -80,7 +66,7 @@ public class ImportCommand implements Callable<Integer> {
     private boolean overwriteFlag;
 
     @Override
-    public Integer call() throws Exception {
+    public int handleCommand() throws Exception {
         DirectoryEntry directory = disk.getFormattedDisks()[0];
         if (directoryName.isPresent()) {
             String[] dirs = directoryName.get().split("/");
@@ -108,27 +94,7 @@ public class ImportCommand implements Callable<Integer> {
             copier.copyFile(directory, reader);
         }
         
-        saveDisk(disk);
-        
         return 0;
-    }
-
-    public void saveDisk(Disk disk) throws DiskUnrecognizedException {
-        saveDisk(disk.getFormattedDisks()[0]);
-    }
-    
-    public void saveDisk(FormattedDisk disk) {
-        try {
-            // Only save if there are changes.
-            if (disk.getDiskImageManager().hasChanged()) {
-                LOG.fine(() -> String.format("Saving disk '%s'", disk.getFilename()));
-                disk.save();
-            } else {
-                LOG.fine(() -> String.format("Disk '%s' has not changed; not saving.", disk.getFilename()));
-            }
-        } catch (IOException e) {
-            LOG.severe(e.getMessage());
-        }
     }
 
     public static class InputData {

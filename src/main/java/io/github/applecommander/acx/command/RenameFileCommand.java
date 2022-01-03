@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import io.github.applecommander.acx.ModifyingCommand;
+import io.github.applecommander.acx.base.ReadWriteDiskCommandOptions;
 import io.github.applecommander.filestreamer.FileStreamer;
 import io.github.applecommander.filestreamer.FileTuple;
 import io.github.applecommander.filestreamer.TypeOfFile;
@@ -13,11 +13,8 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "rename", description = "Rename file on a disk image.",
-        aliases = { "ren" },
-        parameterListHeading = "%nParameters:%n",
-        descriptionHeading = "%n",
-        optionListHeading = "%nOptions:%n")
-public class RenameFileCommand extends ModifyingCommand {
+        aliases = { "ren" })
+public class RenameFileCommand extends ReadWriteDiskCommandOptions {
     private static Logger LOG = Logger.getLogger(RenameFileCommand.class.getName());
     
     @Option(names = { "-m", "--multiple" }, description = "Force rename when multiple files found.")
@@ -26,15 +23,15 @@ public class RenameFileCommand extends ModifyingCommand {
     @Option(names = { "-f", "--force" }, description = "Rename locked files.")
     private boolean lockOverride;
     
-    @Parameters(index = "1", description = "Original file name (include path).")
+    @Parameters(index = "0", description = "Original file name (include path).")
     private String originalFilename;
     
-    @Parameters(index = "2", description = "New file name (just the new filename).")
+    @Parameters(index = "1", description = "New file name (just the new filename).")
     private String newFilename;
 
     @Override
-    public Integer call() throws Exception {
-        List<FileTuple> files = FileStreamer.forDisk(image)
+    public int handleCommand() throws Exception {
+        List<FileTuple> files = FileStreamer.forDisk(disk)
 			        .ignoreErrors(true)
 			        .includeTypeOfFile(TypeOfFile.FILE)
 			        .matchGlobs(originalFilename)
@@ -50,9 +47,7 @@ public class RenameFileCommand extends ModifyingCommand {
         } 
     	else {
         	files.forEach(this::fileHandler);
-        	files.forEach(this::saveDisk);
         }
-        
         return 0;
     }
     

@@ -1,16 +1,14 @@
 package io.github.applecommander.acx.command;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.webcodepro.applecommander.storage.Disk;
 import com.webcodepro.applecommander.storage.DiskException;
-import com.webcodepro.applecommander.storage.DiskUnrecognizedException;
 import com.webcodepro.applecommander.storage.FormattedDisk;
 
+import io.github.applecommander.acx.base.ReadWriteDiskCommandOptions;
 import io.github.applecommander.acx.converter.DiskConverter;
 import io.github.applecommander.acx.fileutil.FileUtils;
 import io.github.applecommander.filestreamer.FileStreamer;
@@ -21,20 +19,10 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "copy", description = "Copy files between disks.",
-         aliases = { "cp" },
-         parameterListHeading = "%nParameters:%n",
-         descriptionHeading = "%n",
-         optionListHeading = "%nOptions:%n")
-public class CopyFileCommand implements Callable<Integer> {
+         aliases = { "cp" })
+public class CopyFileCommand extends ReadWriteDiskCommandOptions {
     private static Logger LOG = Logger.getLogger(CopyFileCommand.class.getName());
 
-    @Option(names = { "-h", "--help" }, description = "Show help for subcommand.", usageHelp = true)
-    private boolean helpFlag;
-
-    @Option(names = { "-d", "--disk" }, description = "Image to process.", required = true,
-            converter = DiskConverter.class, defaultValue = "${ACX_DISK_NAME}")
-    private Disk disk;
-    
     @Option(names = { "-r", "--recursive" }, description = "Copy files recursively.")
     private boolean recursiveFlag;
     
@@ -53,7 +41,7 @@ public class CopyFileCommand implements Callable<Integer> {
     private List<String> globs;
 
     @Override
-    public Integer call() throws Exception {
+    public int handleCommand() throws Exception {
         List<FileTuple> files = FileStreamer.forDisk(sourceDisk)
                 .ignoreErrors(true)
                 .includeTypeOfFile(TypeOfFile.BOTH)
@@ -66,9 +54,7 @@ public class CopyFileCommand implements Callable<Integer> {
             LOG.warning(() -> String.format("No matches found for %s.", String.join(",", globs)));
         } else {
             files.forEach(this::fileHandler);
-            saveDisk(disk);
         }
-        
         return 0;
     }
 
@@ -84,24 +70,6 @@ public class CopyFileCommand implements Callable<Integer> {
         } catch (DiskException ex) {
             LOG.severe(ex.getMessage());
             throw new RuntimeException(ex);
-        }
-    }
-    
-    public void saveDisk(Disk disk) throws DiskUnrecognizedException {
-        saveDisk(disk.getFormattedDisks()[0]);
-    }
-    
-    public void saveDisk(FormattedDisk disk) {
-        try {
-            // Only save if there are changes.
-            if (disk.getDiskImageManager().hasChanged()) {
-                LOG.fine(() -> String.format("Saving disk '%s'", disk.getFilename()));
-                disk.save();
-            } else {
-                LOG.fine(() -> String.format("Disk '%s' has not changed; not saving.", disk.getFilename()));
-            }
-        } catch (IOException e) {
-            LOG.severe(e.getMessage());
         }
     }
 }

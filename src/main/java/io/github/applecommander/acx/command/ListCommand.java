@@ -1,37 +1,23 @@
 package io.github.applecommander.acx.command;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import com.webcodepro.applecommander.storage.DiskUnrecognizedException;
 import com.webcodepro.applecommander.storage.FormattedDisk;
 import com.webcodepro.applecommander.storage.FormattedDisk.FileColumnHeader;
 
+import io.github.applecommander.acx.base.ReadOnlyDiskImageCommandOptions;
 import io.github.applecommander.filestreamer.FileStreamer;
 import io.github.applecommander.filestreamer.FileTuple;
 import io.github.applecommander.filestreamer.TypeOfFile;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
 
 @Command(name = "list", description = "List directory of disk image(s).",
-        aliases = { "ls" },
-        parameterListHeading = "%nParameters:%n",
-        descriptionHeading = "%n",
-        optionListHeading = "%nOptions:%n")
-public class ListCommand implements Callable<Integer> {
-    private static Logger LOG = Logger.getLogger(ListCommand.class.getName());
-
-    @Option(names = { "-h", "--help" }, description = "Show help for subcommand.", usageHelp = true)
-    private boolean helpFlag;
-
-    @ArgGroup(exclusive = true, multiplicity = "0..1", heading = "File display formatting:%n")
+        aliases = { "ls" })
+public class ListCommand extends ReadOnlyDiskImageCommandOptions {
+    @ArgGroup(exclusive = true, multiplicity = "0..1", heading = "%nFile display formatting:%n")
     private FileDisplay fileDisplay = new FileDisplay();
     
     @Option(names = { "-r", "--recursive"}, description = "Display directory recursively.", negatable = true, defaultValue = "false")
@@ -55,27 +41,11 @@ public class ListCommand implements Callable<Integer> {
     @Option(names = "--globs", defaultValue = "*", split = ",", description = "File glob(s) to match.")
     private List<String> globs = new ArrayList<String>();
 
-    @Parameters(arity = "1..*", description = "Image(s) to process.")
-    private List<Path> paths = new ArrayList<Path>();
-
     private List<String> fmtSpec;
-
-    @Override
-    public Integer call() throws Exception {
-        for (Path path : paths) {
-            String filename = path.toString();
-            try {
-                showDisk(filename);
-            } catch (RuntimeException e) {
-                LOG.log(Level.WARNING, filename, e);
-            }
-        }
-        System.out.println();
-        return 0;
-    }
     
-    public void showDisk(String filename) throws DiskUnrecognizedException, IOException {
-        FileStreamer.forDisk(filename)
+    @Override
+    public int handleCommand() throws Exception {
+        FileStreamer.forDisk(disk)
                     .ignoreErrors(true)
                     .includeDeleted(deletedFlag)
                     .recursive(recursiveFlag)
@@ -85,6 +55,7 @@ public class ListCommand implements Callable<Integer> {
                     .afterDisk(this::footer)
                     .stream()
                     .forEach(this::list);
+        return 0;
     }
     
     protected void header(FormattedDisk disk) {

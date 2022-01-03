@@ -2,17 +2,14 @@ package io.github.applecommander.acx.command;
 
 import java.util.logging.Logger;
 
-import io.github.applecommander.acx.ModifyingCommandWithGlobs;
+import io.github.applecommander.acx.base.ReadWriteDiskCommandWithGlobOptions;
 import io.github.applecommander.filestreamer.FileTuple;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 @Command(name = "delete", description = "Delete file(s) from a disk image.",
-        aliases = { "del", "rm" },
-        parameterListHeading = "%nParameters:%n",
-        descriptionHeading = "%n",
-        optionListHeading = "%nOptions:%n")
-public class DeleteCommand extends ModifyingCommandWithGlobs {
+        aliases = { "del", "rm" })
+public class DeleteCommand extends ReadWriteDiskCommandWithGlobOptions {
     private static Logger LOG = Logger.getLogger(DeleteCommand.class.getName());
     
     @Option(names = { "-f", "--force" }, description = "Force delete locked files.")

@@ -1,4 +1,4 @@
-package io.github.applecommander.acx;
+package io.github.applecommander.acx.base;
 
 import java.util.Arrays;
 import java.util.List;
@@ -10,15 +10,15 @@ import io.github.applecommander.filestreamer.FileTuple;
 import io.github.applecommander.filestreamer.TypeOfFile;
 import picocli.CommandLine.Parameters;
 
-public abstract class ModifyingCommandWithGlobs extends ModifyingCommand {
-    private static Logger LOG = Logger.getLogger(ModifyingCommandWithGlobs.class.getName());
+public abstract class ReadWriteDiskCommandWithGlobOptions extends ReadWriteDiskCommandOptions {
+    private static Logger LOG = Logger.getLogger(ReadWriteDiskCommandWithGlobOptions.class.getName());
 
-    @Parameters(index = "1", arity = "1..*", description = "File glob(s) to unlock (default = '*') - be cautious of quoting!")
+    @Parameters(arity = "1..*", description = "File glob(s) to unlock (default = '*') - be cautious of quoting!")
     private List<String> globs = Arrays.asList("*");
 
     @Override
-    public Integer call() throws Exception {
-        List<FileTuple> files = FileStreamer.forDisk(image)
+    public int handleCommand() throws Exception {
+        List<FileTuple> files = FileStreamer.forDisk(disk)
 			        .ignoreErrors(true)
 			        .includeTypeOfFile(TypeOfFile.FILE)
 			        .matchGlobs(globs)
@@ -29,7 +29,6 @@ public abstract class ModifyingCommandWithGlobs extends ModifyingCommand {
         	LOG.warning(() -> String.format("No matches found for %s.", String.join(",", globs)));
         } else {
         	files.forEach(this::fileHandler);
-        	files.forEach(this::saveDisk);
         }
         
         return 0;

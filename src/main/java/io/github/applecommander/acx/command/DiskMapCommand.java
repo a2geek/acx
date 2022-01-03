@@ -1,32 +1,19 @@
 package io.github.applecommander.acx.command;
 
 import java.util.Arrays;
-import java.util.concurrent.Callable;
 import java.util.function.Function;
 
-import com.webcodepro.applecommander.storage.Disk;
 import com.webcodepro.applecommander.storage.FormattedDisk;
 import com.webcodepro.applecommander.storage.FormattedDisk.DiskUsage;
 
-import io.github.applecommander.acx.converter.DiskConverter;
+import io.github.applecommander.acx.base.ReadOnlyDiskImageCommandOptions;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 
 @Command(name = "diskmap", description = "Show disk usage map.",
-         aliases = { "map" },
-         parameterListHeading = "%nParameters:%n",
-         descriptionHeading = "%n",
-         optionListHeading = "%nOptions:%n")
-public class DiskMapCommand implements Callable<Integer> {
-    @Option(names = { "-h", "--help" }, description = "Show help for subcommand.", usageHelp = true)
-    private boolean helpFlag;
-
-    @Option(names = { "-d", "--disk" }, description = "Image to process.", required = true,
-            converter = DiskConverter.class, defaultValue = "${ACX_DISK_NAME}")
-    private Disk disk;
-    
+         aliases = { "map" })
+public class DiskMapCommand extends ReadOnlyDiskImageCommandOptions {
     @Override
-    public Integer call() throws Exception {
+    public int handleCommand() throws Exception {
         Arrays.asList(disk.getFormattedDisks()).forEach(this::showDiskMap);
         return 0;
     }

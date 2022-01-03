@@ -8,7 +8,6 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -18,6 +17,7 @@ import com.webcodepro.applecommander.storage.FileFilter;
 import com.webcodepro.applecommander.storage.filters.BinaryFileFilter;
 import com.webcodepro.applecommander.storage.filters.HexDumpFileFilter;
 
+import io.github.applecommander.acx.base.ReadOnlyDiskImageCommandOptions;
 import io.github.applecommander.filestreamer.FileStreamer;
 import io.github.applecommander.filestreamer.FileTuple;
 import io.github.applecommander.filestreamer.TypeOfFile;
@@ -32,20 +32,14 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
 @Command(name = "export", description = "Export file(s) from a disk image.",
-        aliases = { "x", "get" },
-        parameterListHeading = "%nParameters:%n",
-        descriptionHeading = "%n",
-        optionListHeading = "%nOptions:%n")
-public class ExportCommand implements Callable<Integer> {
+        aliases = { "x", "get" })
+public class ExportCommand extends ReadOnlyDiskImageCommandOptions {
     private static Logger LOG = Logger.getLogger(ExportCommand.class.getName());
 
     @Spec
     private CommandSpec spec;
     
-    @Option(names = { "-h", "--help" }, description = "Show help for subcommand.", usageHelp = true)
-    private boolean helpFlag;
-    
-    @ArgGroup(exclusive = true, heading = "File extract methods:%n")
+    @ArgGroup(exclusive = true, heading = "%nFile extract methods:%n")
     private FileExtractMethods extraction = new FileExtractMethods();
     
     @Option(names = { "--deleted" }, description = "Include deleted files (use at your own risk!)")
@@ -54,10 +48,7 @@ public class ExportCommand implements Callable<Integer> {
     @Option(names = { "-o", "--output" }, description = "Extract to file or to directory (default is stdout).")
     private File outputFile;
     
-    @Parameters(index = "0", description = "Image to process.")
-    private File image;
-    
-    @Parameters(index = "1", arity = "*", description = "File glob(s) to extract (default = '*') - be cautious of quoting!")
+    @Parameters(arity = "*", description = "File glob(s) to extract (default = '*') - be cautious of quoting!")
     private List<String> globs = Arrays.asList("*");
 
     public void validate() {
@@ -74,15 +65,15 @@ public class ExportCommand implements Callable<Integer> {
             throw new ParameterException(spec.commandLine(), String.join(", ", errors));
         }
     }
-
+    
     @Override
-    public Integer call() throws Exception {
+    public int handleCommand() throws Exception {
         validate();
         
         Consumer<FileTuple> fileHandler = 
                 (outputFile == null) ? this::writeToStdout : this::writeToOutput;
         
-        FileStreamer.forDisk(image)
+        FileStreamer.forDisk(disk)
                     .ignoreErrors(true)
                     .includeDeleted(deletedFlag)
                     .includeTypeOfFile(TypeOfFile.FILE)

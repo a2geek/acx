@@ -2,6 +2,41 @@
 
 This is a revamp of the venerable `ac` command-line utility with a more modern command-line interface.
 
+# Sample Run
+
+All of the commands use `-d` to designate the disk. If there are many commands, setting the environment variable `ACX_DISK_NAME` can be used to simplify commands. 
+
+For example, this sequence:
+1. Creates a ProDOS disk image (pulling ProDOS from the 2.4.2 system master).
+2. Imports and tokenizes the sample `startup.bas` program and places it on the disk as `STARTUP`.
+3. Lists the resulting disk.
+
+```
+$ cat > startup.bas
+10 TEXT:HOME:GR
+20 FOR Y=0 TO 3
+30 FOR X=0 TO 3
+40 COLOR=Y*4+X
+50 FOR A=0 TO 9  
+60 HLIN X*10,X*10+9 AT Y*10+A
+70 NEXT A,X,Y
+80 END
+<ctrl+D>
+
+$ export ACX_DISK_NAME=sample.po
+$ acx create --format=ProDOS_2_4_2.dsk --name=SAMPLES --size=140k --type=prodos
+$ acx import --basic startup.bas --name=STARTUP
+
+$ acx list --native
+File: sample.po
+Name: /SAMPLES/
+* PRODOS          SYS      035 01/02/2022 01/13/2018     17,128          
+* BASIC.SYSTEM    SYS      021 01/02/2022 01/13/2018     10,240 A=$2000  
+  STARTUP         BAS      001 01/02/2022 01/02/2022         97 A=$0801  
+ProDOS format; 110592 bytes free; 32768 bytes used.
+```
+
+
 # Usage
 
 ```
